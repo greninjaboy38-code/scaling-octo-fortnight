@@ -1,0 +1,18 @@
+import math
+
+angle_degrees = float(input("Enter angle in degrees: "))
+
+angle_radians = math.radians(angle_degrees)
+
+sin_value = math.sin(angle_radians)
+cos_value = math.cos(angle_radians)
+
+if cos_value == 0:
+    tan_value = "undefined (cosine is zero)"
+else:
+    tan_value = math.tan(angle_radians)
+
+print(f"\nFor angle {angle_degrees}°:")
+print(f"Sine: {sin_value:.6f}")
+print(f"Cosine: {cos_value:.6f}")
+print(f"Tangent: {tan_value}")
