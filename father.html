@@ -1,0 +1,370 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Father's Day Arcade</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(blue,cyan);
+    text-align:center; 
+}
+
+h1{
+    color:white;
+    margin:10px;
+}
+
+#ui{
+    color:white;
+    font-size:24px;
+}
+
+#message{
+    color:yellow;
+    font-size:36px;
+    font-weight:bold;
+    height:50px;
+    margin-top:10px;
+}
+
+#dad{
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    font-size:60px;
+    user-select:none;
+}
+
+.gift{
+    position:absolute;
+    user-select:none;
+}
+
+.confetti{
+    position:absolute;
+    font-size:20px;
+    pointer-events:none;
+}
+
+#startScreen{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.85);
+    color:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:1000;
+}
+
+button{
+    font-size:24px;
+    padding:15px 30px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+#controls{
+    font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="startScreen">
+    <h1>👔 Father's Day Arcade 👔</h1>
+    <p>Catch gifts for Dad!</p>
+    <p id="controls">
+        ⬅️➡️ Move<br>
+        P = Pause<br>
+        R = Restart
+    </p>
+    <button onclick="startGame()">Start Game</button>
+</div>
+
+<h1>🎁 Father's Day Arcade 🎁</h1>
+
+<div id="ui">
+    Score: <span id="score">0</span>
+    |
+    High Score: <span id="highScore">0</span>
+    |
+    Lives: <span id="lives">3</span>
+</div>
+
+<div id="message"></div>
+
+<div id="dad">🧔</div>
+
+<script>
+
+const dad = document.getElementById("dad");
+
+let score = 0;
+let highScore = 0;
+let lives = 3;
+
+let dadX = window.innerWidth / 2;
+
+let leftPressed = false;
+let rightPressed = false;
+
+let gameRunning = false;
+let paused = false;
+
+let streak = 0;
+
+dad.style.left = dadX + "px";
+
+function startGame(){
+    document.getElementById("startScreen").style.display="none";
+    gameRunning = true;
+    createGift();
+}
+
+document.addEventListener("keydown", e => {
+
+    if(e.key === "ArrowLeft"){
+        leftPressed = true;
+    }
+
+    if(e.key === "ArrowRight"){
+        rightPressed = true;
+    }
+
+    if(e.key.toLowerCase() === "p"){
+        paused = !paused;
+    }
+
+    if(e.key.toLowerCase() === "r"){
+        location.reload();
+    }
+
+});
+
+document.addEventListener("keyup", e => {
+
+    if(e.key === "ArrowLeft"){
+        leftPressed = false;
+    }
+
+    if(e.key === "ArrowRight"){
+        rightPressed = false;
+    }
+
+});
+
+function gameLoop(){
+
+    if(gameRunning && !paused){
+
+        if(leftPressed){
+            dadX -= 8;
+        }
+
+        if(rightPressed){
+            dadX += 8;
+        }
+
+        if(dadX < 0){
+            dadX = 0;
+        }
+
+        if(dadX > window.innerWidth - 70){
+            dadX = window.innerWidth - 70;
+        }
+
+        dad.style.left = dadX + "px";
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+function showMessage(text){
+
+    const msg = document.getElementById("message");
+
+    msg.textContent = text;
+
+    launchConfetti();
+
+    setTimeout(()=>{
+        msg.textContent = "";
+    },3000);
+}
+
+function launchConfetti(){
+
+    for(let i=0;i<20;i++){
+
+        const c = document.createElement("div");
+
+        c.className = "confetti";
+
+        c.innerHTML = ["🎉","⭐","💙","❤️"][Math.floor(Math.random()*4)];
+
+        c.style.left = Math.random()*window.innerWidth + "px";
+        c.style.top = "100px";
+
+        document.body.appendChild(c);
+
+        let y = 100;
+
+        const fall = setInterval(()=>{
+
+            y += 5;
+
+            c.style.top = y + "px";
+
+            if(y > window.innerHeight){
+                clearInterval(fall);
+                c.remove();
+            }
+
+        },20);
+    }
+}
+
+function createGift(){
+
+    if(!gameRunning){
+        return;
+    }
+
+    const gift = document.createElement("div");
+    gift.className = "gift";
+
+    let bonusPoints = 1;
+
+    if(score > 0 && score % 50 === 0){
+
+        gift.innerHTML = "🎁";
+        gift.style.fontSize = "80px";
+        bonusPoints = 10;
+
+    }else{
+
+        const gifts = ["🎁","❤️","⭐","🎉"];
+        gift.innerHTML = gifts[Math.floor(Math.random()*gifts.length)];
+        gift.style.fontSize = "40px";
+
+    }
+
+    let x = Math.random()*(window.innerWidth-80);
+    let y = 0;
+
+    gift.style.left = x + "px";
+    gift.style.top = y + "px";
+
+    document.body.appendChild(gift);
+
+    let speed = 4 + Math.floor(score/10);
+
+    const fall = setInterval(()=>{
+
+        if(paused){
+            return;
+        }
+
+        y += speed;
+
+        gift.style.top = y + "px";
+
+        const dadRect = dad.getBoundingClientRect();
+        const giftRect = gift.getBoundingClientRect();
+
+        if(
+            giftRect.bottom >= dadRect.top &&
+            giftRect.left < dadRect.right &&
+            giftRect.right > dadRect.left
+        ){
+
+            score += bonusPoints;
+            streak++;
+
+            document.getElementById("score").textContent = score;
+
+            if(score > highScore){
+                highScore = score;
+                document.getElementById("highScore").textContent = highScore;
+            }
+
+            if(score % 10 === 0){
+
+                const messages = [
+                    "👔 Dad, you're my hero!",
+                    "❤️ Happy Father's Day!",
+                    "🏆 World's Best Dad!",
+                    "💙 We love you Dad!",
+                    "🌟 You're amazing!"
+                ];
+
+                showMessage(
+                    messages[Math.floor(Math.random()*messages.length)]
+                );
+            }
+
+            if(streak === 5){
+                showMessage("🔥 Great Job!");
+            }
+
+            if(streak === 10){
+                showMessage("⭐ Amazing!");
+            }
+
+            if(streak === 20){
+                showMessage("🏆 Dad Champion!");
+            }
+
+            clearInterval(fall);
+            gift.remove();
+
+            createGift();
+        }
+
+        if(y > window.innerHeight){
+
+            streak = 0;
+            lives--;
+
+            document.getElementById("lives").textContent = lives;
+
+            clearInterval(fall);
+            gift.remove();
+
+            if(lives <= 0){
+
+                gameRunning = false;
+
+                alert(
+                    "💔 Game Over!\n\nScore: "
+                    + score +
+                    "\nHigh Score: "
+                    + highScore
+                );
+
+                return;
+            }
+
+            createGift();
+        }
+
+    },20);
+}
+
+</script>
+
+</body>
+</html>
+```
